@@ -1,0 +1,77 @@
+# AI Development Prompt: Municipal Satellite Analysis Web Application
+
+## Application Features & Functionality
+
+### Core Detection Capabilities
+Create a web application that can analyze Sentinel-2 satellite imagery to detect and monitor:
+1. **Informal Settlement Growth** - Identify new unauthorized residential developments and track expansion over time
+2. **Illegal Dumping Sites** - Detect unauthorized waste disposal areas and monitor accumulation
+3. **Water Source Pollution** - Track contamination and changes in water body health
+4. **Deforestation Activities** - Monitor tree cover loss and vegetation degradation
+5. **Flood-Prone Zone Assessment** - Evaluate and map areas susceptible to flooding
+
+### Interactive Dashboard Features
+- **Multi-Layer Map Interface**: Interactive map displaying all detection types as toggleable layers
+- **Temporal Analysis Tools**: Time-slider functionality to view changes over different periods
+- **Area Selection Tools**: Click-and-drag tools to analyze specific regions of interest
+- **Zoom and Pan Controls**: Smooth navigation across different zoom levels and map areas
+- **Layer Transparency Controls**: Adjust opacity of different analysis layers for better visualization
+
+### Data Visualization Features
+- **Heat Maps**: Show intensity and concentration of detected issues
+- **Change Detection Overlays**: Visual comparison between different time periods
+- **Statistical Charts**: Bar charts, line graphs showing trends and statistics
+- **Progress Indicators**: Visual progress bars for ongoing analysis processes
+- **Color-coded Legends**: Clear legends explaining different detection categories and confidence levels
+
+### Analysis and Reporting Features
+- **Automated Report Generation**: Create comprehensive PDF reports with maps, statistics, and analysis
+- **Data Export Options**: Export findings in multiple formats (PDF, CSV, KML, shapefile)
+- **Custom Date Range Analysis**: Select specific time periods for focused analysis
+- **Area Measurement Tools**: Calculate areas of detected settlements, dumping sites, or deforested regions
+- **Trend Analysis**: Generate graphs showing changes over time for each detection type
+- **Comparison Tools**: Side-by-side comparison of different areas or time periods
+
+### User Management Features
+- **Role-Based Access Control**: Different permission levels for administrators, analysts, and viewers
+- **User Dashboard**: Personalized homepage showing recent analyses and bookmarked locations
+- **Saved Analysis Sessions**: Bookmark and save specific map configurations and analysis results
+- **User Activity Logging**: Track user actions and analysis history
+- **Multi-Municipality Support**: Support for multiple municipal accounts with isolated data
+
+### Alert and Notification System
+- **Automated Change Detection**: Identify and highlight significant changes between analysis periods
+- **Threshold-Based Alerts**: Set custom thresholds for different detection types and receive notifications
+- **Email Notifications**: Send alerts and reports via email to designated municipal staff
+- **Priority Flagging**: Mark high-priority issues for immediate attention
+- **Status Tracking**: Monitor the status of identified issues (new, under investigation, resolved)
+
+### Advanced Analysis Features
+- **Confidence Scoring**: Display confidence levels for all detections with visual indicators
+- **Historical Trend Analysis**: Long-term trend analysis showing patterns over months/years
+- **Cross-Reference Analysis**: Compare different detection types to identify correlations
+- **Risk Assessment Tools**: Evaluate and rank areas by risk level for each issue type
+- **Predictive Modeling**: Basic forecasting of potential future changes based on current trends
+
+### Data Management Features
+- **Automated Satellite Data Updates**: Regular download and processing of new Sentinel-2 imagery
+- **Data Quality Indicators**: Show image quality, cloud cover, and data reliability metrics
+- **Archive Management**: Store and organize historical analysis results
+- **Batch Processing**: Queue and process multiple areas or time periods simultaneously
+- **Data Validation Tools**: Manual verification and correction tools for detected areas
+
+### User Experience Features
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Loading Indicators**: Clear progress bars and status updates during processing
+- **Help System**: Built-in tutorials, tooltips, and user guides
+- **Keyboard Shortcuts**: Quick navigation and tool access via keyboard
+- **Customizable Interface**: Adjustable panel layouts and preferred settings
+- **Search Functionality**: Search for specific locations, addresses, or coordinates
+
+### Integration and API Features
+- **REST API**: Programmatic access to analysis results for integration with other municipal systems
+- **Webhook Support**: Automatic notifications to external systems when new detections occur
+- **GIS Software Integration**: Export compatibility with popular GIS software packages
+- **Print-Friendly Outputs**: Optimized layouts for printing maps and reports
+
+Create a comprehensive, user-friendly application that municipalities can use effectively to monitor and respond to environmental and social challenges in their jurisdictions.

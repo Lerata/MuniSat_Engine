@@ -1,0 +1,467 @@
+# AI Prompt: Environmental Monitoring Web Application
+
+## Project Overview
+Create a comprehensive web application for governments, NGOs, and urban planners to detect, track, and respond to:
+- Informal settlements
+- Waste management issues
+- Water quality monitoring
+- Forest protection
+- Flood risk assessment
+- Analytics and reporting
+
+## Core Requirements
+
+### 1. Authentication System
+- **Login Page**: Functional login with email/password
+- **Registration Page**: User registration with form validation
+- **Session Management**: Keep users logged in after initial login
+- **Database Integration**: Store user credentials securely (hashed passwords)
+
+### 2. Database Configuration
+**Recommended Solution: PostgreSQL with SQLAlchemy**
+
+**Database Schema Example:**
+```sql
+-- Users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    organization VARCHAR(255),
+    role VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Images table
+CREATE TABLE uploaded_images (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    filename VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    analysis_type VARCHAR(100),
+    upload_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    analysis_results JSONB
+);
+
+-- Analysis results table
+CREATE TABLE analysis_results (
+    id SERIAL PRIMARY KEY,
+    image_id INTEGER REFERENCES uploaded_images(id),
+    detection_type VARCHAR(100),
+    confidence_score FLOAT,
+    coordinates JSONB,
+    metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Database Connection Example (Flask + SQLAlchemy):**
+```python
+# config.py
+import os
+from urllib.parse import quote_plus
+
+class Config:
+    # Replace with your actual database credentials
+    DATABASE_URL = os.environ.get('DATABASE_URL') or \
+        f"postgresql://username:{quote_plus('password')}@localhost:5432/environmental_monitoring"
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here'
+    UPLOAD_FOLDER = 'uploads'
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+```
+
+### 3. Frontend Structure
+**Tech Stack: HTML5, CSS3, JavaScript, Bootstrap 5**
+
+**Required Pages:**
+1. **index.html** - Landing page with login/register options
+2. **login.html** - Login form
+3. **register.html** - Registration form
+4. **dashboard.html** - Main dashboard after login
+5. **upload.html** - Image upload interface
+6. **analysis.html** - Analysis results display
+7. **reports.html** - Analytics and reporting page
+
+### 4. Image Upload Functionality
+**Requirements:**
+- Drag-and-drop interface
+- Multiple file upload support
+- Progress bars for uploads
+- Image preview before upload
+- File type validation (JPG, PNG, TIFF, etc.)
+- Integration with ML backend for analysis
+
+**Upload Interface Features:**
+```javascript
+// Example upload functionality
+function uploadImages() {
+    const formData = new FormData();
+    const files = document.getElementById('imageFiles').files;
+    
+    for (let i = 0; i < files.length; i++) {
+        formData.append('images', files[i]);
+    }
+    
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle successful upload
+        displayAnalysisResults(data);
+    });
+}
+```
+
+### 5. Flask Backend Integration Points
+**Create these Flask route templates for easy backend integration:**
+
+```python
+# app.py - Main Flask application structure
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+
+app = Flask(__name__)
+app.config.from_object('config.Config')
+db = SQLAlchemy(app)
+
+# USER AUTHENTICATION ROUTES
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # TODO: Implement login logic
+    # Verify credentials against database
+    # Set session variables
+    pass
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    # TODO: Implement registration logic
+    # Hash password and store in database
+    pass
+
+@app.route('/logout')
+def logout():
+    # TODO: Clear session
+    pass
+
+# IMAGE UPLOAD AND ANALYSIS ROUTES
+@app.route('/upload', methods=['POST'])
+def upload_images():
+    # TODO: Handle file uploads
+    # Save files to disk
+    # Call ML analysis function
+    # Store results in database
+    pass
+
+# ML ANALYSIS INTEGRATION POINT
+@app.route('/analyze/<int:image_id>')
+def analyze_image(image_id):
+    # TODO: This is where you'll integrate your ML model
+    # 
+    # PASTE YOUR MACHINE LEARNING CODE HERE:
+    # =====================================
+    # 
+    # Example structure:
+    # 1. Load your trained model
+    # 2. Preprocess the image
+    # 3. Run inference
+    # 4. Return results
+    #
+    # YOUR ML CODE GOES BELOW THIS LINE:
+    
+    
+    # YOUR ML CODE GOES ABOVE THIS LINE
+    # =====================================
+    pass
+
+# DASHBOARD AND REPORTING ROUTES
+@app.route('/dashboard')
+def dashboard():
+    # TODO: Display user dashboard with recent uploads and analysis
+    pass
+
+@app.route('/reports')
+def reports():
+    # TODO: Generate analytics and reports
+    pass
+```
+
+### 6. ML Backend Integration Template
+**Create dedicated files for ML integration:**
+
+**ml_models.py:**
+```python
+# ml_models.py - Machine Learning Integration
+import cv2
+import numpy as np
+from tensorflow import keras  # or your preferred ML framework
+
+class EnvironmentalDetector:
+    def __init__(self):
+        # TODO: Load your trained models here
+        # 
+        # PASTE YOUR MODEL LOADING CODE HERE:
+        # ==================================
+        
+        
+        # ==================================
+        pass
+    
+    def detect_informal_settlements(self, image_path):
+        # TODO: Implement informal settlement detection
+        # PASTE YOUR DETECTION CODE HERE:
+        pass
+    
+    def analyze_waste_management(self, image_path):
+        # TODO: Implement waste detection
+        # PASTE YOUR DETECTION CODE HERE:
+        pass
+    
+    def assess_water_quality(self, image_path):
+        # TODO: Implement water quality analysis
+        # PASTE YOUR DETECTION CODE HERE:
+        pass
+    
+    def monitor_forest_protection(self, image_path):
+        # TODO: Implement forest monitoring
+        # PASTE YOUR DETECTION CODE HERE:
+        pass
+    
+    def assess_flood_risk(self, image_path):
+        # TODO: Implement flood risk assessment
+        # PASTE YOUR DETECTION CODE HERE:
+        pass
+
+# Example usage in your Flask route:
+detector = EnvironmentalDetector()
+
+def process_uploaded_image(image_path, analysis_type):
+    if analysis_type == 'informal_settlements':
+        return detector.detect_informal_settlements(image_path)
+    elif analysis_type == 'waste_management':
+        return detector.analyze_waste_management(image_path)
+    # Add other analysis types...
+```
+
+### 7. Project Structure
+```
+environmental-monitoring-app/
+├── app.py                 # Main Flask application
+├── config.py             # Configuration settings
+├── requirements.txt      # Python dependencies
+├── ml_models.py          # ML model integration
+├── database.py           # Database models
+├── static/
+│   ├── css/
+│   │   ├── bootstrap.min.css
+│   │   └── custom.css
+│   ├── js/
+│   │   ├── bootstrap.min.js
+│   │   ├── jquery.min.js
+│   │   └── app.js
+│   └── images/
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   ├── upload.html
+│   ├── analysis.html
+│   └── reports.html
+├── uploads/              # Directory for uploaded images
+├── models/              # Directory for ML model files
+└── README.md
+```
+
+### 8. Requirements.txt
+```txt
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+psycopg2-binary==2.9.6
+Werkzeug==2.3.6
+Pillow==10.0.0
+opencv-python==4.7.1.72
+numpy==1.24.3
+tensorflow==2.12.0
+scikit-learn==1.2.2
+pandas==2.0.2
+python-dotenv==1.0.0
+gunicorn==20.1.0
+```
+
+### 9. Local Development Setup
+**Create these files for easy local setup:**
+
+**run_local.py:**
+```python
+#!/usr/bin/env python3
+import os
+from app import app, db
+
+if __name__ == '__main__':
+    # Create database tables
+    with app.app_context():
+        db.create_all()
+    
+    # Run the application
+    app.run(debug=True, host='0.0.0.0', port=5000)
+```
+
+**setup.sh (for Unix/Linux/Mac):**
+```bash
+#!/bin/bash
+echo "Setting up Environmental Monitoring App..."
+
+# Create virtual environment
+python3 -m venv env
+source env/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create necessary directories
+mkdir -p uploads models static/css static/js static/images
+
+echo "Setup complete! Run 'python run_local.py' to start the application."
+```
+
+**setup.bat (for Windows):**
+```batch
+@echo off
+echo Setting up Environmental Monitoring App...
+
+REM Create virtual environment
+python -m venv env
+call env\Scripts\activate
+
+REM Install dependencies
+pip install -r requirements.txt
+
+REM Create necessary directories
+mkdir uploads models static\css static\js static\images
+
+echo Setup complete! Run 'python run_local.py' to start the application.
+```
+
+### 10. GitHub Deployment Configuration
+
+**Procfile (for Heroku):**
+```
+web: gunicorn app:app
+```
+
+**runtime.txt:**
+```
+python-3.11.4
+```
+
+**.env.example:**
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/environmental_monitoring
+SECRET_KEY=your-secret-key-here
+FLASK_ENV=production
+```
+
+**README.md:**
+```markdown
+# Environmental Monitoring Web Application
+
+## Quick Start (Local Development)
+
+1. Clone the repository
+2. Run setup script:
+   - On Unix/Linux/Mac: `chmod +x setup.sh && ./setup.sh`
+   - On Windows: `setup.bat`
+3. Configure your database in `.env` file
+4. Run the application: `python run_local.py`
+5. Open browser to `http://localhost:5000`
+
+## Database Setup
+1. Install PostgreSQL
+2. Create database: `createdb environmental_monitoring`
+3. Update DATABASE_URL in .env file
+4. Run the application (tables will be created automatically)
+
+## ML Model Integration
+1. Place your trained model files in the `models/` directory
+2. Update the model loading code in `ml_models.py`
+3. Implement your detection functions in the respective methods
+
+## Deployment
+- GitHub: Push to repository
+- Heroku: Connect GitHub repository and deploy
+- Local: Run `python run_local.py`
+```
+
+### 11. Key Features to Implement
+
+**Dashboard Features:**
+- Recent uploads display
+- Analysis results summary
+- Quick action buttons
+- Statistics and metrics
+
+**Upload Interface:**
+- Drag and drop functionality
+- Progress indicators
+- Image preview
+- Batch processing options
+
+**Analysis Display:**
+- Interactive results visualization
+- Confidence scores
+- Bounding boxes for detections
+- Export functionality
+
+**Reporting System:**
+- Generate PDF reports
+- Data visualization charts
+- Export to CSV/Excel
+- Historical analysis trends
+
+### 12. Security Considerations
+- Password hashing with bcrypt
+- CSRF protection
+- File upload validation
+- SQL injection prevention
+- Session management
+- Input sanitization
+
+### 13. Performance Optimization
+- Image compression before storage
+- Asynchronous processing for ML analysis
+- Database indexing
+- Caching for frequently accessed data
+- Progress tracking for long-running processes
+
+## Implementation Notes
+
+1. **All buttons must be functional** - no placeholder buttons
+2. **Self-contained package** - all dependencies included, no external CDNs
+3. **Easy ML integration** - clearly marked areas for pasting ML code
+4. **Local development ready** - works immediately after download
+5. **GitHub deployment ready** - includes all necessary configuration files
+6. **Database flexibility** - easy to switch between PostgreSQL, MySQL, or SQLite
+
+## Final Deliverables Required
+
+1. Complete web application with all pages
+2. Working authentication system
+3. Functional image upload with preview
+4. Database integration with example data
+5. ML integration points clearly marked
+6. Local development setup scripts
+7. Deployment configuration files
+8. Comprehensive documentation
+9. Downloadable ZIP package
+10. GitHub repository structure
+
+**Please ensure all functionality works without requiring external libraries from Replit or other online platforms. The application should be completely self-contained and ready for immediate local development and deployment.**
