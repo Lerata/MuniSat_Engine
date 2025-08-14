@@ -298,63 +298,66 @@ def uploaded_file(filename):
 # ML Integration Functions
 def analyze_image(image_id):
     """
-    ML INTEGRATION POINT - REPLACE WITH YOUR MACHINE LEARNING CODE
+    ML INTEGRATION POINT - Now uses the ml_models.py module
     
     This function is called after an image is uploaded to perform analysis.
-    Integrate your trained models here.
+    Your ML models are integrated through the ml_models.py module.
     """
     try:
+        from ml_models import process_image
+        
         uploaded_image = UploadedImage.query.get(image_id)
         if not uploaded_image:
             return
         
-        # PLACEHOLDER: Replace with actual ML analysis
-        # Example mock results for demonstration
-        mock_results = [
-            {
-                'detection_type': 'informal_settlements',
-                'confidence_score': 0.85,
-                'coordinates': {'lat': -1.2921, 'lng': 36.8219, 'bounds': [[0, 0], [100, 100]]},
-                'area': 2500.0,
-                'priority': 'high'
-            },
-            {
-                'detection_type': 'waste_management',
-                'confidence_score': 0.72,
-                'coordinates': {'lat': -1.2925, 'lng': 36.8225, 'bounds': [[50, 50], [150, 150]]},
-                'area': 800.0,
-                'priority': 'medium'
-            }
-        ]
+        # Get analysis type from the uploaded image
+        analysis_type = uploaded_image.analysis_type or 'comprehensive'
         
-        # Save analysis results
-        for result in mock_results:
-            analysis_result = AnalysisResult(
-                image_id=image_id,
-                detection_type=result['detection_type'],
-                confidence_score=result['confidence_score'],
-                coordinates=result['coordinates'],
-                area=result['area'],
-                priority=result['priority'],
-                metadata={'mock_data': True}
-            )
-            db.session.add(analysis_result)
+        # Process image using ML models
+        ml_results = process_image(uploaded_image.file_path, analysis_type)
+        
+        # Save analysis results to database
+        detection_count = 0
+        for result in ml_results:
+            if 'error' not in result:
+                analysis_result = AnalysisResult(
+                    image_id=image_id,
+                    detection_type=result['detection_type'],
+                    confidence_score=result['confidence_score'],
+                    coordinates=result['coordinates'],
+                    area=result['area'],
+                    priority=result['priority'],
+                    metadata=result.get('metadata', {})
+                )
+                db.session.add(analysis_result)
+                detection_count += 1
         
         # Update image with analysis completion
-        uploaded_image.analysis_results = {'status': 'completed', 'detections': len(mock_results)}
+        uploaded_image.analysis_results = {
+            'status': 'completed', 
+            'detections': detection_count,
+            'analysis_type': analysis_type,
+            'timestamp': datetime.utcnow().isoformat()
+        }
         db.session.commit()
-
-        # TODO: INTEGRATE YOUR ML MODEL HERE
-        # ===================================
-        # 1. Load your trained model
-        # 2. Preprocess the image at uploaded_image.file_path
-        # 3. Run inference
-        # 4. Parse results and save to AnalysisResult table
-        # 5. Update uploaded_image.analysis_results
-        # ===================================
+        
+        print(f"Analysis completed for image {image_id}: {detection_count} detections found")
         
     except Exception as e:
         print(f"Analysis failed for image {image_id}: {str(e)}")
+        
+        # Update image with error status
+        try:
+            uploaded_image = UploadedImage.query.get(image_id)
+            if uploaded_image:
+                uploaded_image.analysis_results = {
+                    'status': 'failed',
+                    'error': str(e),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+                db.session.commit()
+        except:
+            pass
 
 # API Routes for AJAX calls
 @app.route('/api/dashboard/stats')

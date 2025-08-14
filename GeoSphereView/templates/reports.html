@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - MuniSat Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-globe2"></i> MuniSat Analytics
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('upload') }}">Upload</a>
+                <a class="nav-link" href="{{ url_for('analysis') }}">Analysis</a>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2>Reports & Analytics</h2>
+                <p class="text-muted">Generate and manage environmental monitoring reports</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Generate New Report</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('generate_report') }}">
+                            <div class="mb-3">
+                                <label for="reportType" class="form-label">Report Type</label>
+                                <select class="form-select" id="reportType" name="report_type" required>
+                                    <option value="">Select Report Type</option>
+                                    <option value="comprehensive_analysis">Comprehensive Analysis</option>
+                                    <option value="informal_settlements">Informal Settlements Report</option>
+                                    <option value="waste_management">Waste Management Report</option>
+                                    <option value="water_quality">Water Quality Report</option>
+                                    <option value="deforestation">Deforestation Report</option>
+                                    <option value="flood_assessment">Flood Assessment Report</option>
+                                    <option value="trend_analysis">Trend Analysis Report</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dateRange" class="form-label">Date Range (days)</label>
+                                <select class="form-select" id="dateRange" name="date_range">
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last year</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-file-text me-2"></i>Generate Report
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h6>Quick Export</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="exportData('csv')">
+                                <i class="bi bi-filetype-csv me-2"></i>Export CSV
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="exportData('pdf')">
+                                <i class="bi bi-filetype-pdf me-2"></i>Export PDF
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="exportData('kml')">
+                                <i class="bi bi-geo-alt me-2"></i>Export KML
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Generated Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if reports %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Report Title</th>
+                                            <th>Type</th>
+                                            <th>Generated</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for report in reports %}
+                                        <tr>
+                                            <td>{{ report.title }}</td>
+                                            <td>{{ report.report_type.replace('_', ' ').title() }}</td>
+                                            <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if report.status == 'generated' else 'warning' }}">
+                                                    {{ report.status.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="viewReport('{{ report.id }}')">
+                                                    <i class="bi bi-eye"></i> View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" onclick="downloadReport('{{ report.id }}')">
+                                                    <i class="bi bi-download"></i> Download
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-file-text text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted mt-3">No Reports Generated</h5>
+                                <p class="text-muted">Create your first report using the form on the left.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Report Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="reportContent">
+                    <!-- Report content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" onclick="downloadCurrentReport()">
+                        <i class="bi bi-download me-2"></i>Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function viewReport(reportId) {
+            // Mock report content
+            const reportContent = document.getElementById('reportContent');
+            reportContent.innerHTML = `
+                <div class="report-preview">
+                    <div class="text-center mb-4">
+                        <h3>Environmental Monitoring Report</h3>
+                        <p class="text-muted">Generated on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Summary Statistics</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Total Detections:</strong> 45</li>
+                                        <li><strong>High Priority:</strong> 8</li>
+                                        <li><strong>Medium Priority:</strong> 22</li>
+                                        <li><strong>Low Priority:</strong> 15</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Detection Breakdown</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Informal Settlements:</strong> 12</li>
+                                        <li><strong>Waste Sites:</strong> 8</li>
+                                        <li><strong>Water Pollution:</strong> 6</li>
+                                        <li><strong>Deforestation:</strong> 11</li>
+                                        <li><strong>Flood Risk:</strong> 8</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Key Findings</h6>
+                        <p>This report analyzes environmental changes detected through satellite imagery analysis. The data shows significant activity in several key areas that require immediate attention from municipal authorities.</p>
+                        
+                        <h6>Recommendations</h6>
+                        <ul>
+                            <li>Prioritize high-risk areas for immediate field verification</li>
+                            <li>Implement monitoring protocols for medium-risk detections</li>
+                            <li>Schedule regular follow-up analysis for trend tracking</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            new bootstrap.Modal(document.getElementById('reportModal')).show();
+        }
+
+        function downloadReport(reportId) {
+            // Mock download functionality
+            alert('Report download would start here for report: ' + reportId);
+        }
+
+        function downloadCurrentReport() {
+            alert('Current report PDF download would start here.');
+        }
+
+        function exportData(format) {
+            alert(`Data export in ${format.toUpperCase()} format would start here.`);
+        }
+    </script>
+</body>
+</html>

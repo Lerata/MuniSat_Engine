@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - MuniSat Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-globe2"></i> MuniSat Analytics
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('upload') }}">Upload</a>
+                <a class="nav-link" href="{{ url_for('reports') }}">Reports</a>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2>Analysis Results</h2>
+                <p class="text-muted">Review environmental monitoring analysis results</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Filters</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Detection Type</label>
+                            <select class="form-select" id="typeFilter">
+                                <option value="">All Types</option>
+                                <option value="informal_settlements">Informal Settlements</option>
+                                <option value="waste_management">Waste Management</option>
+                                <option value="water_quality">Water Quality</option>
+                                <option value="deforestation">Deforestation</option>
+                                <option value="flood_assessment">Flood Assessment</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" id="priorityFilter">
+                                <option value="">All Priorities</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Min Confidence</label>
+                            <input type="range" class="form-range" min="0" max="100" value="0" id="confidenceFilter">
+                            <small class="text-muted">0% - 100%</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                {% if results %}
+                    <div class="row" id="resultsContainer">
+                        {% for result in results %}
+                        <div class="col-md-6 col-lg-4 mb-4 result-card" 
+                             data-type="{{ result.detection_type }}" 
+                             data-priority="{{ result.priority }}" 
+                             data-confidence="{{ result.confidence_score or 0 }}">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title">{{ result.detection_type.replace('_', ' ').title() }}</h6>
+                                        <span class="badge bg-{{ 'danger' if result.priority == 'high' else 'warning' if result.priority == 'medium' else 'info' }}">
+                                            {{ result.priority.title() }}
+                                        </span>
+                                    </div>
+                                    
+                                    {% if result.confidence_score %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Confidence Score</small>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ result.confidence_score * 100 }}%"
+                                                 aria-valuenow="{{ result.confidence_score * 100 }}" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small>{{ "%.1f"|format(result.confidence_score * 100) }}%</small>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if result.area %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Area: {{ "%.2f"|format(result.area) }} m²</small>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="mb-2">
+                                        <small class="text-muted">Detected: {{ result.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewDetails('{{ result.id }}')">
+                                            <i class="bi bi-eye me-1"></i>View Details
+                                        </button>
+                                        {% if result.coordinates %}
+                                        <button class="btn btn-sm btn-outline-success" onclick="viewOnMap('{{ result.coordinates|tojson|e }}')">
+                                            <i class="bi bi-geo-alt me-1"></i>Map
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                        <h4 class="text-muted mt-3">No Analysis Results</h4>
+                        <p class="text-muted">Upload some images to start analyzing environmental data.</p>
+                        <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload me-2"></i>Upload Images
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detection Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="exportDetails()">Export Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Filter functionality
+        const typeFilter = document.getElementById('typeFilter');
+        const priorityFilter = document.getElementById('priorityFilter');
+        const confidenceFilter = document.getElementById('confidenceFilter');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        function applyFilters() {
+            const cards = document.querySelectorAll('.result-card');
+            const typeValue = typeFilter.value;
+            const priorityValue = priorityFilter.value;
+            const confidenceValue = parseFloat(confidenceFilter.value);
+
+            cards.forEach(card => {
+                const cardType = card.dataset.type;
+                const cardPriority = card.dataset.priority;
+                const cardConfidence = parseFloat(card.dataset.confidence) * 100;
+
+                const typeMatch = !typeValue || cardType === typeValue;
+                const priorityMatch = !priorityValue || cardPriority === priorityValue;
+                const confidenceMatch = cardConfidence >= confidenceValue;
+
+                if (typeMatch && priorityMatch && confidenceMatch) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        if (typeFilter) typeFilter.addEventListener('change', applyFilters);
+        if (priorityFilter) priorityFilter.addEventListener('change', applyFilters);
+        if (confidenceFilter) confidenceFilter.addEventListener('input', applyFilters);
+
+        function viewDetails(resultId) {
+            // Mock implementation - replace with actual API call
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Detection Information</h6>
+                        <p><strong>ID:</strong> ${resultId}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-success">Confirmed</span></p>
+                        <p><strong>Detection Algorithm:</strong> Deep Learning CNN</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Location Data</h6>
+                        <p><strong>Coordinates:</strong> Available</p>
+                        <p><strong>Area Coverage:</strong> Calculated</p>
+                        <p><strong>Image Source:</strong> Sentinel-2</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Additional Metadata</h6>
+                    <p>This detection was identified using advanced machine learning algorithms trained on satellite imagery data.</p>
+                </div>
+            `;
+            new bootstrap.Modal(document.getElementById('detailsModal')).show();
+        }
+
+        function viewOnMap(coordinates) {
+            // Mock implementation - would open map view
+            alert('Map view functionality would open here with coordinates: ' + coordinates);
+        }
+
+        function exportDetails() {
+            alert('Export functionality would download detailed data here.');
+        }
+    </script>
+</body>
+</html>
