@@ -404,16 +404,14 @@ def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
-# Create database tables
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
 if __name__ == '__main__':
     # Create database tables
     with app.app_context():
         db.create_all()
+        print("Database tables created successfully")
     
     # Run the application
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    print("Starting Environmental Monitoring Web Application...")
+    print("Access at: http://0.0.0.0:5000")
     app.run(debug=debug_mode, host='0.0.0.0', port=5000)

@@ -3,6 +3,7 @@ run = "npm run dev"
 
 [nix]
 channel = "stable-25_05"
+packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tk", "zlib"]
 
 [deployment]
 run = ["sh", "-c", "npm run dev"]
@@ -17,4 +18,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd GeoSphereView && python app.py"
+args = "cd GeoSphereView && python run_replit.py"
