@@ -7,15 +7,16 @@ Environmental Monitoring Web Application
 
 import os
 import sys
-from app import app, db
 
 def setup_replit_environment():
     """Setup environment for Replit"""
     # Set environment variables
     os.environ['DATABASE_URL'] = 'sqlite:///instance/munisat.db'
-    os.environ['SECRET_KEY'] = 'replit-dev-secret-key'
+    os.environ['SECRET_KEY'] = 'replit-dev-secret-key-change-in-production'
     os.environ['FLASK_ENV'] = 'development'
     os.environ['FLASK_DEBUG'] = 'True'
+    os.environ['UPLOAD_FOLDER'] = 'uploads'
+    os.environ['MAX_CONTENT_LENGTH'] = '16777216'
     
     print("Environment configured for Replit")
 
@@ -34,11 +35,17 @@ def create_directories():
 def initialize_database():
     """Initialize the database"""
     try:
+        # Import app and db after environment is set up
+        from app import app, db
+        
         with app.app_context():
             db.create_all()
             print("Database initialized successfully")
+            
+        return app
     except Exception as e:
         print(f"Database initialization error: {str(e)}")
+        raise
 
 if __name__ == '__main__':
     print("="*50)
@@ -49,7 +56,7 @@ if __name__ == '__main__':
     # Setup
     setup_replit_environment()
     create_directories()
-    initialize_database()
+    app = initialize_database()
     
     print("\nStarting application...")
     print("Access at the Replit preview URL")

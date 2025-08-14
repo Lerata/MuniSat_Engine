@@ -86,7 +86,7 @@ class AnalysisResult(db.Model):
     area = db.Column(db.Float)
     status = db.Column(db.String(50), default='detected')
     priority = db.Column(db.String(20), default='medium')
-    metadata = db.Column(db.JSON)
+    analysis_metadata = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Report(db.Model):
@@ -327,7 +327,7 @@ def analyze_image(image_id):
                     coordinates=result['coordinates'],
                     area=result['area'],
                     priority=result['priority'],
-                    metadata=result.get('metadata', {})
+                    analysis_metadata=result.get('metadata', {})
                 )
                 db.session.add(analysis_result)
                 detection_count += 1
