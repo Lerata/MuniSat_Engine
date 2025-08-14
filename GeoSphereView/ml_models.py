@@ -364,17 +364,37 @@ class EnvironmentalDetector:
         self.load_models()
     
     def load_models(self):
-        """Load ML models (placeholder implementation)"""
-        # In a real implementation, you would load your trained models here
-        # For now, we'll use mock detection
-        self.models = {
-            'informal_settlements': 'mock_model',
-            'waste_management': 'mock_model',
-            'deforestation': 'mock_model',
-            'water_quality': 'mock_model',
-            'air_pollution': 'mock_model'
-        }
-        print("ML models loaded successfully (mock implementation)")
+        """Load ML models"""
+        try:
+            # REPLACE THIS SECTION WITH YOUR ACTUAL MODEL LOADING CODE
+            # Example for TensorFlow/Keras models:
+            # import tensorflow as tf
+            # self.models['informal_settlements'] = tf.keras.models.load_model('models/informal_settlements.h5')
+            # self.models['waste_management'] = tf.keras.models.load_model('models/waste_management.h5')
+            
+            # Example for PyTorch models:
+            # import torch
+            # model = YourModelClass()
+            # model.load_state_dict(torch.load('models/your_model.pth'))
+            # self.models['informal_settlements'] = model
+            
+            # For now, using mock models - REPLACE WITH YOUR TRAINED MODELS
+            self.models = {
+                'informal_settlements': 'mock_model',
+                'waste_management': 'mock_model',
+                'deforestation': 'mock_model',
+                'water_quality': 'mock_model',
+                'air_pollution': 'mock_model'
+            }
+            print("ML models loaded successfully (currently using mock implementation)")
+            print("TO INTEGRATE YOUR MODELS:")
+            print("1. Place your .h5/.pth model files in the 'models/' directory")
+            print("2. Update the load_models() function with your model loading code")
+            print("3. Update detection functions with your inference code")
+            
+        except Exception as e:
+            print(f"Error loading models: {str(e)}")
+            print("Using mock models for demonstration")
     
     def detect_informal_settlements(self, image_path: str) -> List[Dict]:
         """Detect informal settlements in satellite imagery"""

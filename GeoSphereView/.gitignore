@@ -1,0 +1,39 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+
+# Flask
+instance/
+uploads/
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (add these manually)
+models/*.h5
+models/*.pth
+models/*.pkl
+
+# Node modules (if any)
+node_modules/

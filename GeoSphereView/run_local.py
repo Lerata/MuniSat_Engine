@@ -98,3 +98,50 @@ def main():
 
 if __name__ == '__main__':
     main()
+#!/usr/bin/env python3
+"""
+Local Development Server
+"""
+import os
+from app import app, db, User
+from werkzeug.security import generate_password_hash
+
+def create_demo_user():
+    """Create demo user for testing"""
+    try:
+        demo_user = User.query.filter_by(email='demo@munisat.com').first()
+        if not demo_user:
+            demo_user = User(
+                email='demo@munisat.com',
+                password_hash=generate_password_hash('demo123'),
+                first_name='Demo',
+                last_name='User',
+                organization='Municipal Government',
+                role='analyst'
+            )
+            db.session.add(demo_user)
+            db.session.commit()
+            print("Demo user created: demo@munisat.com / demo123")
+    except Exception as e:
+        print(f"Error creating demo user: {e}")
+
+if __name__ == '__main__':
+    print("=" * 50)
+    print("MuniSat Analytics - Local Development")
+    print("=" * 50)
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
+        create_demo_user()
+        print("Database initialized successfully")
+    
+    print("\nStarting development server...")
+    print("Access at: http://localhost:5000")
+    print("\nDemo Login:")
+    print("Email: demo@munisat.com")
+    print("Password: demo123")
+    print("=" * 50)
+    
+    # Run the application
+    app.run(debug=True, host='0.0.0.0', port=5000)

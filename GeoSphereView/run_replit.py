@@ -38,10 +38,27 @@ def initialize_database():
     """Initialize the database"""
     try:
         # Import app and db after environment is set up
-        from app import app, db
+        from app import app, db, User
+        from werkzeug.security import generate_password_hash
         
         with app.app_context():
             db.create_all()
+            
+            # Create demo user for testing
+            demo_user = User.query.filter_by(email='demo@munisat.com').first()
+            if not demo_user:
+                demo_user = User(
+                    email='demo@munisat.com',
+                    password_hash=generate_password_hash('demo123'),
+                    first_name='Demo',
+                    last_name='User',
+                    organization='Municipal Government',
+                    role='analyst'
+                )
+                db.session.add(demo_user)
+                db.session.commit()
+                print("Demo user created: demo@munisat.com / demo123")
+            
             print("Database initialized successfully")
             
         return app
