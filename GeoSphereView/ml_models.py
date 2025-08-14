@@ -341,3 +341,175 @@ if __name__ == "__main__":
 
     # You can add test code here to validate your models
     pass
+#!/usr/bin/env python3
+"""
+Machine Learning Models Integration
+Environmental Detection Models
+"""
+
+import os
+import json
+from datetime import datetime
+from typing import Dict, List, Any
+import random
+
+class EnvironmentalDetector:
+    """
+    Environmental detection using machine learning models
+    This is a placeholder implementation for ML integration
+    """
+    
+    def __init__(self):
+        self.models = {}
+        self.load_models()
+    
+    def load_models(self):
+        """Load ML models (placeholder implementation)"""
+        # In a real implementation, you would load your trained models here
+        # For now, we'll use mock detection
+        self.models = {
+            'informal_settlements': 'mock_model',
+            'waste_management': 'mock_model',
+            'deforestation': 'mock_model',
+            'water_quality': 'mock_model',
+            'air_pollution': 'mock_model'
+        }
+        print("ML models loaded successfully (mock implementation)")
+    
+    def detect_informal_settlements(self, image_path: str) -> List[Dict]:
+        """Detect informal settlements in satellite imagery"""
+        # Mock detection results
+        results = []
+        if random.random() > 0.3:  # 70% chance of detection
+            results.append({
+                'detection_type': 'informal_settlement',
+                'confidence_score': round(random.uniform(0.6, 0.95), 3),
+                'coordinates': {
+                    'lat': round(random.uniform(-34.0, -33.9), 6),
+                    'lng': round(random.uniform(18.3, 18.5), 6)
+                },
+                'area': round(random.uniform(100, 5000), 2),
+                'priority': random.choice(['high', 'medium', 'low']),
+                'metadata': {
+                    'estimated_structures': random.randint(5, 50),
+                    'growth_rate': 'moderate'
+                }
+            })
+        return results
+    
+    def detect_waste_sites(self, image_path: str) -> List[Dict]:
+        """Detect illegal waste dumping sites"""
+        results = []
+        if random.random() > 0.4:  # 60% chance of detection
+            results.append({
+                'detection_type': 'illegal_waste_dump',
+                'confidence_score': round(random.uniform(0.5, 0.9), 3),
+                'coordinates': {
+                    'lat': round(random.uniform(-34.0, -33.9), 6),
+                    'lng': round(random.uniform(18.3, 18.5), 6)
+                },
+                'area': round(random.uniform(50, 2000), 2),
+                'priority': random.choice(['high', 'medium']),
+                'metadata': {
+                    'waste_type': random.choice(['mixed', 'construction', 'organic']),
+                    'contamination_risk': random.choice(['low', 'medium', 'high'])
+                }
+            })
+        return results
+    
+    def detect_deforestation(self, image_path: str) -> List[Dict]:
+        """Detect deforestation and land use changes"""
+        results = []
+        if random.random() > 0.5:  # 50% chance of detection
+            results.append({
+                'detection_type': 'deforestation',
+                'confidence_score': round(random.uniform(0.6, 0.95), 3),
+                'coordinates': {
+                    'lat': round(random.uniform(-34.0, -33.9), 6),
+                    'lng': round(random.uniform(18.3, 18.5), 6)
+                },
+                'area': round(random.uniform(500, 10000), 2),
+                'priority': random.choice(['high', 'medium']),
+                'metadata': {
+                    'forest_loss': f"{round(random.uniform(10, 80), 1)}%",
+                    'change_period': '6 months'
+                }
+            })
+        return results
+    
+    def analyze_water_quality(self, image_path: str) -> List[Dict]:
+        """Analyze water quality from satellite imagery"""
+        results = []
+        if random.random() > 0.6:  # 40% chance of issues
+            results.append({
+                'detection_type': 'water_quality_issue',
+                'confidence_score': round(random.uniform(0.5, 0.85), 3),
+                'coordinates': {
+                    'lat': round(random.uniform(-34.0, -33.9), 6),
+                    'lng': round(random.uniform(18.3, 18.5), 6)
+                },
+                'area': round(random.uniform(1000, 50000), 2),
+                'priority': random.choice(['medium', 'low']),
+                'metadata': {
+                    'quality_indicator': random.choice(['algae_bloom', 'pollution', 'sedimentation']),
+                    'severity': random.choice(['minor', 'moderate', 'severe'])
+                }
+            })
+        return results
+
+# Global detector instance
+detector = EnvironmentalDetector()
+
+def process_image(image_path: str, analysis_type: str = 'comprehensive') -> List[Dict]:
+    """
+    Process an uploaded image and return detection results
+    
+    Args:
+        image_path: Path to the uploaded image
+        analysis_type: Type of analysis to perform
+        
+    Returns:
+        List of detection results
+    """
+    try:
+        results = []
+        
+        # Check if image file exists
+        if not os.path.exists(image_path):
+            return [{'error': f'Image file not found: {image_path}'}]
+        
+        # Perform different types of analysis based on request
+        if analysis_type == 'comprehensive' or analysis_type == 'all':
+            results.extend(detector.detect_informal_settlements(image_path))
+            results.extend(detector.detect_waste_sites(image_path))
+            results.extend(detector.detect_deforestation(image_path))
+            results.extend(detector.analyze_water_quality(image_path))
+        elif analysis_type == 'settlements':
+            results.extend(detector.detect_informal_settlements(image_path))
+        elif analysis_type == 'waste':
+            results.extend(detector.detect_waste_sites(image_path))
+        elif analysis_type == 'deforestation':
+            results.extend(detector.detect_deforestation(image_path))
+        elif analysis_type == 'water':
+            results.extend(detector.analyze_water_quality(image_path))
+        
+        # Add processing timestamp to all results
+        for result in results:
+            if 'error' not in result:
+                result['processed_at'] = datetime.utcnow().isoformat()
+                result['image_path'] = image_path
+        
+        return results if results else []
+        
+    except Exception as e:
+        return [{'error': f'Processing failed: {str(e)}'}]
+
+def get_available_models() -> List[str]:
+    """Get list of available detection models"""
+    return list(detector.models.keys())
+
+if __name__ == '__main__':
+    # Test the ML integration
+    print("Testing ML Models Integration...")
+    test_results = process_image('/tmp/test.jpg', 'comprehensive')
+    print(f"Test completed: {len(test_results)} results generated")

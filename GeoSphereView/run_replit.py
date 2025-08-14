@@ -11,7 +11,7 @@ import sys
 def setup_replit_environment():
     """Setup environment for Replit"""
     # Set environment variables
-    os.environ['DATABASE_URL'] = 'sqlite:///instance/munisat.db'
+    os.environ['DATABASE_URL'] = 'sqlite:///munisat.db'
     os.environ['SECRET_KEY'] = 'replit-dev-secret-key-change-in-production'
     os.environ['FLASK_ENV'] = 'development'
     os.environ['FLASK_DEBUG'] = 'True'
@@ -29,6 +29,8 @@ def create_directories():
     
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
+        # Ensure proper permissions
+        os.chmod(directory, 0o755)
     
     print("Directories created")
 
