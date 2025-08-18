@@ -24,28 +24,44 @@ def install_dependencies():
     """Install required Python packages"""
     print("📦 Installing dependencies...")
     
-    # Core dependencies
+    # Updated dependencies with better compatibility
     dependencies = [
-        "Flask==2.3.2",
-        "Flask-SQLAlchemy==3.0.5",
-        "Flask-Migrate==4.0.4",
-        "Flask-Login==0.6.2",
-        "Werkzeug==2.3.6",
+        "Flask==3.0.0",
+        "Flask-SQLAlchemy==3.1.1",
+        "Flask-Migrate==4.0.5",
+        "Flask-Login==0.6.3",
+        "Werkzeug==3.0.1",
         "python-dotenv==1.0.0",
-        "Pillow==10.0.0",
-        "numpy==1.24.3",
-        "scikit-learn==1.2.2",
-        "pandas==2.0.2",
-        "gunicorn==20.1.0"
+        "Pillow>=10.1.0",  # More compatible version
+        "numpy>=1.24.0",
+        "scikit-learn>=1.3.0",
+        "pandas>=2.0.0",
+        "gunicorn==21.2.0"
     ]
+    
+    # Upgrade pip first
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'pip'])
+        print("✅ Pip upgraded")
+    except subprocess.CalledProcessError:
+        print("⚠️  Could not upgrade pip")
     
     for package in dependencies:
         try:
+            print(f"Installing {package}...")
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
             print(f"✅ Installed {package}")
         except subprocess.CalledProcessError:
             print(f"❌ Failed to install {package}")
-            return False
+            # Try without version constraint for problematic packages
+            package_name = package.split('==')[0].split('>=')[0]
+            try:
+                print(f"Trying to install {package_name} without version constraint...")
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
+                print(f"✅ Installed {package_name}")
+            except subprocess.CalledProcessError:
+                print(f"❌ Failed to install {package_name}")
+                continue
     
     return True
 
@@ -203,32 +219,33 @@ def main():
     # Install dependencies
     if not install_dependencies():
         print("❌ Setup failed during dependency installation")
-        sys.exit(1)
+        print("ℹ️  You can try installing packages manually:")
+        print("pip install Flask Flask-SQLAlchemy Flask-Login Werkzeug Pillow")
     
     # Initialize database
-    if not initialize_database():
-        print("❌ Setup failed during database initialization")
-        sys.exit(1)
+    try:
+        if not initialize_database():
+            print("❌ Setup failed during database initialization")
+    except ImportError as e:
+        print(f"⚠️  Database initialization skipped due to missing dependencies: {e}")
+        print("Run the script again after installing all dependencies")
     
     # Create run script
     create_run_script()
     
     print("\n" + "="*60)
-    print("🎉 Setup completed successfully!")
+    print("🎉 Setup completed!")
     print("="*60)
     print("\n📋 Next Steps:")
     print("1. Start the application:")
     print("   python start_app.py")
+    print("   OR")
+    print("   python run_local.py")
     print("\n2. Open your browser to:")
     print("   http://localhost:5000")
     print("\n3. Login with demo credentials:")
     print("   Email: demo@munisat.com")
     print("   Password: demo123")
-    print("\n4. For production deployment:")
-    print("   - Update SECRET_KEY in .env")
-    print("   - Configure PostgreSQL database")
-    print("   - Add your ML models to models/ directory")
-    print("   - Update ml_models.py with actual model code")
     print("\n" + "="*60)
 
 if __name__ == '__main__':

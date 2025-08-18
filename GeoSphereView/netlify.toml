@@ -1,0 +1,17 @@
+
+[build]
+  command = "python setup_local_complete.py && python -c 'from app import app, db; app.app_context().push(); db.create_all()'"
+  publish = "."
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  command = "python run_local.py"
+  port = 5000
+  targetPort = 5000
