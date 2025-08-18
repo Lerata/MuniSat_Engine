@@ -409,9 +409,26 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("Database tables created successfully")
+        
+        # Create demo user if it doesn't exist
+        demo_user = User.query.filter_by(email='demo@munisat.com').first()
+        if not demo_user:
+            from werkzeug.security import generate_password_hash
+            demo_user = User(
+                email='demo@munisat.com',
+                password_hash=generate_password_hash('demo123'),
+                first_name='Demo',
+                last_name='User',
+                organization='Municipal Government',
+                role='analyst'
+            )
+            db.session.add(demo_user)
+            db.session.commit()
+            print("Demo user created: demo@munisat.com / demo123")
 
     # Run the application
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     print("Starting Environmental Monitoring Web Application...")
+    print("Demo login: demo@munisat.com / demo123")
     print("Access at: http://0.0.0.0:5000")
     app.run(debug=debug_mode, host='0.0.0.0', port=5000)
