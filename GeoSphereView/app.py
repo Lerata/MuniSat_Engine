@@ -45,7 +45,7 @@ login_manager.login_message = 'Please log in to access this page.'
 # Database Models
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -55,14 +55,14 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(50), default='analyst')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     uploaded_images = db.relationship('UploadedImage', backref='user', lazy=True)
     reports = db.relationship('Report', backref='user', lazy=True)
 
 class UploadedImage(db.Model):
     __tablename__ = 'uploaded_images'
-    
+
     id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
@@ -71,13 +71,13 @@ class UploadedImage(db.Model):
     analysis_type = db.Column(db.String(100))
     upload_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     analysis_results = db.Column(db.JSON)
-    
+
     # Relationships
     analysis_results_rel = db.relationship('AnalysisResult', backref='image', lazy=True)
 
 class AnalysisResult(db.Model):
     __tablename__ = 'analysis_results'
-    
+
     id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     image_id = db.Column(db.String(50), db.ForeignKey('uploaded_images.id'), nullable=False)
     detection_type = db.Column(db.String(100), nullable=False)
@@ -91,7 +91,7 @@ class AnalysisResult(db.Model):
 
 class Report(db.Model):
     __tablename__ = 'reports'
-    
+
     id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
@@ -117,20 +117,20 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
+
         if not email or not password:
             flash('Email and password are required.', 'error')
             return render_template('login.html')
-        
+
         user = User.query.filter_by(email=email).first()
-        
+
         if user and check_password_hash(user.password_hash, password):
             login_user(user, remember=True)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password.', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -142,25 +142,25 @@ def register():
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         organization = request.form.get('organization')
-        
+
         # Validation
         if not all([email, password, confirm_password, first_name, last_name]):
             flash('All fields are required.', 'error')
             return render_template('register.html')
-        
+
         if password != confirm_password:
             flash('Passwords do not match.', 'error')
             return render_template('register.html')
-        
+
         if len(password) < 6:
             flash('Password must be at least 6 characters long.', 'error')
             return render_template('register.html')
-        
+
         # Check if user already exists
         if User.query.filter_by(email=email).first():
             flash('Email address already registered.', 'error')
             return render_template('register.html')
-        
+
         # Create new user
         user = User(
             email=email,
@@ -170,7 +170,7 @@ def register():
             organization=organization,
             role='analyst'
         )
-        
+
         try:
             db.session.add(user)
             db.session.commit()
@@ -180,7 +180,7 @@ def register():
         except Exception as e:
             db.session.rollback()
             flash('Registration failed. Please try again.', 'error')
-    
+
     return render_template('register.html')
 
 @app.route('/logout')
@@ -197,11 +197,11 @@ def dashboard():
     total_uploads = UploadedImage.query.filter_by(user_id=current_user.id).count()
     total_analyses = AnalysisResult.query.join(UploadedImage).filter(UploadedImage.user_id == current_user.id).count()
     recent_uploads = UploadedImage.query.filter_by(user_id=current_user.id).order_by(UploadedImage.upload_timestamp.desc()).limit(5).all()
-    
-    return render_template('dashboard.html', 
-                         total_uploads=total_uploads,
-                         total_analyses=total_analyses,
-                         recent_uploads=recent_uploads)
+
+    return render_template('dashboard.html',
+                           total_uploads=total_uploads,
+                           total_analyses=total_analyses,
+                           recent_uploads=recent_uploads)
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -209,22 +209,22 @@ def upload():
     if request.method == 'POST':
         if 'images' not in request.files:
             return jsonify({'error': 'No files uploaded'}), 400
-        
+
         files = request.files.getlist('images')
         analysis_type = request.form.get('analysis_type', 'comprehensive')
-        
+
         uploaded_files = []
-        
+
         for file in files:
             if file and file.filename:
                 # Secure the filename
                 original_filename = file.filename
                 filename = secure_filename(f"{uuid.uuid4()}_{original_filename}")
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                
+
                 try:
                     file.save(file_path)
-                    
+
                     # Save to database
                     uploaded_image = UploadedImage(
                         user_id=current_user.id,
@@ -233,24 +233,24 @@ def upload():
                         file_path=file_path,
                         analysis_type=analysis_type
                     )
-                    
+
                     db.session.add(uploaded_image)
                     db.session.commit()
-                    
+
                     # Trigger analysis (placeholder for ML integration)
                     analyze_image(uploaded_image.id)
-                    
+
                     uploaded_files.append({
                         'id': uploaded_image.id,
                         'filename': original_filename,
                         'analysis_type': analysis_type
                     })
-                    
+
                 except Exception as e:
                     return jsonify({'error': f'Failed to upload {original_filename}'}), 500
-        
+
         return jsonify({'uploaded_files': uploaded_files})
-    
+
     return render_template('upload.html')
 
 @app.route('/analysis')
@@ -260,7 +260,7 @@ def analysis():
     results = db.session.query(AnalysisResult).join(UploadedImage).filter(
         UploadedImage.user_id == current_user.id
     ).order_by(AnalysisResult.created_at.desc()).all()
-    
+
     return render_template('analysis.html', results=results)
 
 @app.route('/reports')
@@ -274,7 +274,7 @@ def reports():
 def generate_report():
     report_type = request.form.get('report_type')
     date_range = request.form.get('date_range', '30')
-    
+
     # Create new report
     report = Report(
         user_id=current_user.id,
@@ -283,10 +283,10 @@ def generate_report():
         parameters={'date_range': date_range},
         status='generated'
     )
-    
+
     db.session.add(report)
     db.session.commit()
-    
+
     flash('Report generated successfully!', 'success')
     return redirect(url_for('reports'))
 
@@ -299,23 +299,23 @@ def uploaded_file(filename):
 def analyze_image(image_id):
     """
     ML INTEGRATION POINT - Now uses the ml_models.py module
-    
+
     This function is called after an image is uploaded to perform analysis.
     Your ML models are integrated through the ml_models.py module.
     """
     try:
         from ml_models import process_image
-        
+
         uploaded_image = UploadedImage.query.get(image_id)
         if not uploaded_image:
             return
-        
+
         # Get analysis type from the uploaded image
         analysis_type = uploaded_image.analysis_type or 'comprehensive'
-        
+
         # Process image using ML models
         ml_results = process_image(uploaded_image.file_path, analysis_type)
-        
+
         # Save analysis results to database
         detection_count = 0
         for result in ml_results:
@@ -331,21 +331,21 @@ def analyze_image(image_id):
                 )
                 db.session.add(analysis_result)
                 detection_count += 1
-        
+
         # Update image with analysis completion
         uploaded_image.analysis_results = {
-            'status': 'completed', 
+            'status': 'completed',
             'detections': detection_count,
             'analysis_type': analysis_type,
             'timestamp': datetime.utcnow().isoformat()
         }
         db.session.commit()
-        
+
         print(f"Analysis completed for image {image_id}: {detection_count} detections found")
-        
+
     except Exception as e:
         print(f"Analysis failed for image {image_id}: {str(e)}")
-        
+
         # Update image with error status
         try:
             uploaded_image = UploadedImage.query.get(image_id)
@@ -380,7 +380,7 @@ def api_recent_detections():
     results = db.session.query(AnalysisResult).join(UploadedImage).filter(
         UploadedImage.user_id == current_user.id
     ).order_by(AnalysisResult.created_at.desc()).limit(10).all()
-    
+
     detections = []
     for result in results:
         detections.append({
@@ -391,7 +391,7 @@ def api_recent_detections():
             'priority': result.priority,
             'date': result.created_at.isoformat()
         })
-    
+
     return jsonify(detections)
 
 # Error handlers
@@ -409,7 +409,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         print("Database tables created successfully")
-    
+
     # Run the application
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     print("Starting Environmental Monitoring Web Application...")
