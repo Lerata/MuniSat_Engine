@@ -13,7 +13,9 @@ def setup_environment():
     """Setup environment variables and configurations"""
     # Set default environment variables if not already set
     if not os.environ.get('DATABASE_URL'):
-        os.environ['DATABASE_URL'] = 'sqlite:///instance/munisat.db'
+        # Use absolute path for Windows compatibility
+        db_path = os.path.abspath('instance/munisat.db')
+        os.environ['DATABASE_URL'] = f'sqlite:///{db_path}'
     
     if not os.environ.get('SECRET_KEY'):
         os.environ['SECRET_KEY'] = 'dev-secret-key-change-in-production'
