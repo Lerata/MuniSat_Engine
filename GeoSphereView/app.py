@@ -25,10 +25,24 @@ app = Flask(__name__)
 
 # Configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///instance/munisat.db')
+
+# Database configuration - PostgreSQL for production, SQLite for development
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith('postgres://'):
+    # Fix for Render's PostgreSQL URL format
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///instance/munisat.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16MB
+
+# Production settings
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['DEBUG'] = False
+    app.config['TESTING'] = False
+else:
+    app.config['DEBUG'] = True
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -404,31 +418,40 @@ def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
-if __name__ == '__main__':
-    # Create database tables
+# Initialize database and demo data
+def init_db():
+    """Initialize database tables and demo data"""
     with app.app_context():
-        db.create_all()
-        print("Database tables created successfully")
-        
-        # Create demo user if it doesn't exist
-        demo_user = User.query.filter_by(email='demo@munisat.com').first()
-        if not demo_user:
-            from werkzeug.security import generate_password_hash
-            demo_user = User(
-                email='demo@munisat.com',
-                password_hash=generate_password_hash('demo123'),
-                first_name='Demo',
-                last_name='User',
-                organization='Municipal Government',
-                role='analyst'
-            )
-            db.session.add(demo_user)
-            db.session.commit()
-            print("Demo user created: demo@munisat.com / demo123")
+        try:
+            db.create_all()
+            print("Database tables created successfully")
+            
+            # Create demo user if it doesn't exist
+            demo_user = User.query.filter_by(email='demo@munisat.com').first()
+            if not demo_user:
+                from werkzeug.security import generate_password_hash
+                demo_user = User(
+                    email='demo@munisat.com',
+                    password_hash=generate_password_hash('demo123'),
+                    first_name='Demo',
+                    last_name='User',
+                    organization='Municipal Government',
+                    role='analyst'
+                )
+                db.session.add(demo_user)
+                db.session.commit()
+                print("Demo user created: demo@munisat.com / demo123")
+        except Exception as e:
+            print(f"Database initialization error: {e}")
 
-    # Run the application
+# Initialize database on import (for production servers like Gunicorn)
+init_db()
+
+if __name__ == '__main__':
+    # Development server
+    port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     print("Starting Environmental Monitoring Web Application...")
     print("Demo login: demo@munisat.com / demo123")
-    print("Access at: http://0.0.0.0:5000")
-    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
+    print(f"Access at: http://0.0.0.0:{port}")
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
