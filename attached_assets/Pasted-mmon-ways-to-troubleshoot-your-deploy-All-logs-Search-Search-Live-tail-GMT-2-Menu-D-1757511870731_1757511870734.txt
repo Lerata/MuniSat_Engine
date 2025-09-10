@@ -1,0 +1,174 @@
+mmon ways to troubleshoot your deploy.
+
+All logs
+Search
+Search
+
+Live tail
+GMT+2
+
+Menu
+
+ Downloading pillow
+ Downloading scikit-learn
+ Downloading numpy
+ Downloading opencv-python-headless
+ Downloading scipy
+Prepared 25 packages in 1.55s
+Installed 25 packages in 111ms
+Bytecode compiled 2770 files in 4.79s
+ + alembic==1.16.4
+ + blinker==1.9.0
+ + click==8.2.1
+ + flask==3.1.1
+ + flask-login==0.6.3
+ + flask-migrate==4.1.0
+ + flask-sqlalchemy==3.1.1
+ + greenlet==3.2.4
+ + gunicorn==23.0.0
+ + itsdangerous==2.2.0
+ + jinja2==3.1.6
+ + joblib==1.5.1
+ + mako==1.3.10
+ + markupsafe==3.0.2
+ + numpy==2.3.2
+ + opencv-python-headless==4.11.0.86
+ + packaging==25.0
+ + pillow==11.3.0
+ + python-dotenv==1.1.1
+ + scikit-learn==1.7.1
+ + scipy==1.16.1
+ + sqlalchemy==2.0.43
+ + threadpoolctl==3.6.0
+ + typing-extensions==4.14.1
+ + werkzeug==3.1.3
+Pruning cache at: /opt/render/.cache/.python-uv/cache
+Removed 4518 files (368.8MiB)
+==> Uploading build...
+==> Uploaded in 14.6s. Compression took 4.0s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'gunicorn --bind 0.0.0.0:$PORT app:app'
+Traceback (most recent call last):
+  File "/opt/render/project/src/.venv/bin/gunicorn", line 10, in <module>
+    sys.exit(run())
+             ~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 66, in run
+    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 235, in run
+    super().run()
+    ~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 71, in run
+    Arbiter(self).run()
+    ~~~~~~~^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 57, in __init__
+    self.setup(app)
+    ~~~~~~~~~~^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 117, in setup
+    self.app.wsgi()
+    ~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+                    ~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+    return self.load_wsgiapp()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+    return util.import_app(self.app_uri)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/util.py", line 370, in import_app
+    mod = importlib.import_module(module)
+  File "/usr/local/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/opt/render/project/src/GeoSphereView/app.py", line 38, in <module>
+    db = SQLAlchemy(app)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 278, in __init__
+    self.init_app(app)
+    ~~~~~~~~~~~~~^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 374, in init_app
+    engines[key] = self._make_engine(key, options, app)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 665, in _make_engine
+    return sa.engine_from_config(options, prefix="")
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 838, in engine_from_config
+    return create_engine(url, **options)
+  File "<string>", line 2, in create_engine
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 617, in create_engine
+    dbapi = dbapi_meth(**dbapi_args)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/psycopg2.py", line 696, in import_dbapi
+    import psycopg2
+ModuleNotFoundError: No module named 'psycopg2'
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+==> Running 'gunicorn --bind 0.0.0.0:$PORT app:app'
+Traceback (most recent call last):
+  File "/opt/render/project/src/.venv/bin/gunicorn", line 10, in <module>
+    sys.exit(run())
+             ~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 66, in run
+    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 235, in run
+    super().run()
+    ~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 71, in run
+    Arbiter(self).run()
+    ~~~~~~~^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 57, in __init__
+    self.setup(app)
+    ~~~~~~~~~~^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/arbiter.py", line 117, in setup
+    self.app.wsgi()
+    ~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+                    ~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 57, in load
+    return self.load_wsgiapp()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+    return util.import_app(self.app_uri)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/util.py", line 370, in import_app
+    mod = importlib.import_module(module)
+  File "/usr/local/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/opt/render/project/src/GeoSphereView/app.py", line 38, in <module>
+    db = SQLAlchemy(app)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 278, in __init__
+    self.init_app(app)
+    ~~~~~~~~~~~~~^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 374, in init_app
+    engines[key] = self._make_engine(key, options, app)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask_sqlalchemy/extension.py", line 665, in _make_engine
+    return sa.engine_from_config(options, prefix="")
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 838, in engine_from_config
+    return create_engine(url, **options)
+  File "<string>", line 2, in create_engine
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 617, in create_engine
+    dbapi = dbapi_meth(**dbapi_args)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/dialects/postgresql/psycopg2.py", line 696, in import_dbapi
+    import psycopg2
+ModuleNotFoundError: No module named 'psycopg2'
