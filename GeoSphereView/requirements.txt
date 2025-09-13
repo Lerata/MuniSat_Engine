@@ -11,3 +11,4 @@ Pillow==11.3.0
 numpy==2.3.2
 requests==2.32.3
 python-dateutil==2.8.2
+reportlab==4.0.4

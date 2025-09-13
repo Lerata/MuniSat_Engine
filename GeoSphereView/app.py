@@ -93,15 +93,23 @@ class AnalysisResult(db.Model):
     __tablename__ = 'analysis_results'
 
     id = db.Column(db.String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
-    image_id = db.Column(db.String(50), db.ForeignKey('uploaded_images.id'), nullable=False)
+    image_id = db.Column(db.String(50), db.ForeignKey('uploaded_images.id'), nullable=True)
     detection_type = db.Column(db.String(100), nullable=False)
     confidence_score = db.Column(db.Float)
-    coordinates = db.Column(db.JSON)
-    area = db.Column(db.Float)
+    coordinates = db.Column(db.JSON)  # Store lat/lon or bbox coordinates
+    area = db.Column(db.Float)  # Area in hectares or pixels
     status = db.Column(db.String(50), default='detected')
     priority = db.Column(db.String(20), default='medium')
     analysis_metadata = db.Column(db.JSON)
+    detection_date = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # New fields for MVP features
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    alert_sent = db.Column(db.Boolean, default=False)
+    reviewed = db.Column(db.Boolean, default=False)
+    reviewer_notes = db.Column(db.Text)
 
 class Report(db.Model):
     __tablename__ = 'reports'
@@ -207,15 +215,8 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Get user statistics
-    total_uploads = UploadedImage.query.filter_by(user_id=current_user.id).count()
-    total_analyses = AnalysisResult.query.join(UploadedImage).filter(UploadedImage.user_id == current_user.id).count()
-    recent_uploads = UploadedImage.query.filter_by(user_id=current_user.id).order_by(UploadedImage.upload_timestamp.desc()).limit(5).all()
-
-    return render_template('dashboard.html',
-                           total_uploads=total_uploads,
-                           total_analyses=total_analyses,
-                           recent_uploads=recent_uploads)
+    # Use the new MVP dashboard
+    return render_template('dashboard_mvp.html')
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -446,6 +447,13 @@ def init_db():
 
 # Initialize database on import (for production servers like Gunicorn)
 init_db()
+
+# Import API routes after app initialization
+try:
+    import api_routes
+except ImportError as e:
+    print(f"Could not import API routes: {e}")
+    print("API functionality may be limited")
 
 if __name__ == '__main__':
     # Development server

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MuniSat Analytics - Dashboard</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        .dashboard-container {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            height: 100vh;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+        
+        .map-container {
+            height: 100vh;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .layer-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .priority-high { color: #dc3545; }
+        .priority-medium { color: #ffc107; }
+        .priority-low { color: #28a745; }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #0066cc !important;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .alert-item {
+            border-left: 4px solid;
+            padding-left: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .alert-high { border-color: #dc3545; }
+        .alert-medium { border-color: #ffc107; }
+        .alert-low { border-color: #28a745; }
+        
+        .detection-popup {
+            font-size: 12px;
+        }
+        
+        .detection-popup h6 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .loading-spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">🛰️ MuniSat Analytics</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="#" onclick="generateReport()">📊 Generate Report</a>
+                <a class="nav-link" href="/reports">📋 Reports</a>
+                <a class="nav-link" href="/settings">⚙️ Settings</a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        👤 {{ current_user.first_name or 'User' }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid dashboard-container">
+        <div class="row h-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar p-3">
+                <!-- Quick Stats -->
+                <div class="card stat-card mb-3">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Quick Stats</h5>
+                        <div class="row">
+                            <div class="col-4">
+                                <h4 id="totalDetections">--</h4>
+                                <small>Total Areas</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 id="highPriority">--</h4>
+                                <small>High Priority</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 id="recentDetections">--</h4>
+                                <small>Recent</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-light btn-sm mt-2" onclick="refreshDetections()">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">🚨 Recent Alerts</h6>
+                    </div>
+                    <div class="card-body" id="recentAlerts">
+                        <div class="text-center text-muted">
+                            <small>Loading alerts...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Area Analysis -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">📍 Area Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label">Coordinates</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           id="analyzeLatitude" placeholder="Latitude" step="0.0001">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           id="analyzeLongitude" placeholder="Longitude" step="0.0001">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="analyzeArea()">
+                            🔍 Analyze Area
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generate Report -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">📊 Generate Report</h6>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-success btn-sm w-100" onclick="generateReport()">
+                            📄 Generate PDF Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Area -->
+            <div class="col-md-9 p-0">
+                <div class="map-container">
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Layer Toggle Controls -->
+                    <div class="layer-toggle">
+                        <h6>Detection Layers</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="informalSettlements" checked>
+                            <label class="form-check-label" for="informalSettlements">
+                                🏠 Informal Settlements
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="illegalDumping" checked>
+                            <label class="form-check-label" for="illegalDumping">
+                                🗑️ Illegal Dumping
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="legend">
+                        <h6>Legend</h6>
+                        <div><span class="badge bg-danger">●</span> High Priority</div>
+                        <div><span class="badge bg-warning text-dark">●</span> Medium Priority</div>
+                        <div><span class="badge bg-success">●</span> Low Priority</div>
+                    </div>
+
+                    <!-- Map -->
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detection Details Modal -->
+    <div class="modal fade" id="detectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detection Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detectionModalBody">
+                    <!-- Detection details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" onclick="sendAlert()">🚨 Send Alert</button>
+                    <button type="button" class="btn btn-info" onclick="generateDetectionReport()">📊 Generate Report</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let map;
+        let detectionsLayer;
+        let currentDetections = [];
+        let selectedDetection = null;
+
+        // Initialize map
+        function initializeMap() {
+            // Default to Johannesburg, South Africa
+            map = L.map('map').setView([-26.2041, 28.0473], 12);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Create layer for detections
+            detectionsLayer = L.layerGroup().addTo(map);
+
+            // Load initial detections
+            loadDetections();
+        }
+
+        // Load detections from server
+        async function loadDetections() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/detections');
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentDetections = data.detections;
+                    displayDetections(currentDetections);
+                    updateStats(data.stats);
+                    updateRecentAlerts(data.recent_alerts || []);
+                } else {
+                    console.error('Failed to load detections:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading detections:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display detections on map
+        function displayDetections(detections) {
+            // Clear existing markers
+            detectionsLayer.clearLayers();
+
+            detections.forEach(detection => {
+                if (detection.latitude && detection.longitude) {
+                    const priorityColor = {
+                        'high': '#dc3545',
+                        'medium': '#ffc107', 
+                        'low': '#28a745'
+                    };
+
+                    const marker = L.circleMarker([detection.latitude, detection.longitude], {
+                        radius: 8,
+                        fillColor: priorityColor[detection.priority] || '#6c757d',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+
+                    // Create popup content
+                    const popupContent = `
+                        <div class="detection-popup">
+                            <h6>${detection.detection_type.replace('_', ' ').toUpperCase()}</h6>
+                            <p><strong>Confidence:</strong> ${detection.confidence_score}%</p>
+                            <p><strong>Priority:</strong> <span class="priority-${detection.priority}">${detection.priority.toUpperCase()}</span></p>
+                            <p><strong>Date:</strong> ${new Date(detection.detection_date).toLocaleDateString()}</p>
+                            <p><strong>Area:</strong> ${detection.area || 'N/A'} hectares</p>
+                            <button class="btn btn-primary btn-sm" onclick="showDetectionDetails('${detection.id}')">View Details</button>
+                        </div>
+                    `;
+
+                    marker.bindPopup(popupContent);
+                    detectionsLayer.addLayer(marker);
+                }
+            });
+        }
+
+        // Update statistics
+        function updateStats(stats) {
+            if (stats) {
+                document.getElementById('totalDetections').textContent = stats.total || 0;
+                document.getElementById('highPriority').textContent = stats.high_priority || 0;
+                document.getElementById('recentDetections').textContent = stats.recent || 0;
+            }
+        }
+
+        // Update recent alerts
+        function updateRecentAlerts(alerts) {
+            const container = document.getElementById('recentAlerts');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<small class="text-muted">No recent alerts</small>';
+                return;
+            }
+
+            const alertsHTML = alerts.map(alert => `
+                <div class="alert-item alert-${alert.priority}">
+                    <small>
+                        <strong>${alert.detection_type.replace('_', ' ')}</strong><br>
+                        Priority: ${alert.priority}<br>
+                        <span class="text-muted">${new Date(alert.created_at).toLocaleString()}</span>
+                    </small>
+                </div>
+            `).join('');
+
+            container.innerHTML = alertsHTML;
+        }
+
+        // Show detection details modal
+        function showDetectionDetails(detectionId) {
+            const detection = currentDetections.find(d => d.id === detectionId);
+            if (!detection) return;
+
+            selectedDetection = detection;
+
+            const modalBody = document.getElementById('detectionModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>Detection Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Type:</strong></td><td>${detection.detection_type.replace('_', ' ')}</td></tr>
+                            <tr><td><strong>Confidence:</strong></td><td>${detection.confidence_score}%</td></tr>
+                            <tr><td><strong>Priority:</strong></td><td class="priority-${detection.priority}">${detection.priority.toUpperCase()}</td></tr>
+                            <tr><td><strong>Coordinates:</strong></td><td>${detection.latitude}, ${detection.longitude}</td></tr>
+                            <tr><td><strong>Area:</strong></td><td>${detection.area || 'N/A'} hectares</td></tr>
+                            <tr><td><strong>Detection Date:</strong></td><td>${new Date(detection.detection_date).toLocaleDateString()}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td>${detection.status}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Actions</h6>
+                        <div class="mb-2">
+                            <label class="form-label">Update Status:</label>
+                            <select class="form-select form-select-sm" id="detectionStatus">
+                                <option value="detected" ${detection.status === 'detected' ? 'selected' : ''}>Detected</option>
+                                <option value="investigating" ${detection.status === 'investigating' ? 'selected' : ''}>Investigating</option>
+                                <option value="resolved" ${detection.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Priority:</label>
+                            <select class="form-select form-select-sm" id="detectionPriority">
+                                <option value="low" ${detection.priority === 'low' ? 'selected' : ''}>Low</option>
+                                <option value="medium" ${detection.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                                <option value="high" ${detection.priority === 'high' ? 'selected' : ''}>High</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success btn-sm w-100" onclick="updateDetection()">Update</button>
+                    </div>
+                </div>
+            `;
+
+            new bootstrap.Modal(document.getElementById('detectionModal')).show();
+        }
+
+        // Analyze specific area
+        async function analyzeArea() {
+            const lat = parseFloat(document.getElementById('analyzeLatitude').value);
+            const lon = parseFloat(document.getElementById('analyzeLongitude').value);
+
+            if (!lat || !lon) {
+                alert('Please enter valid coordinates');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const response = await fetch('/api/analyze-area', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ latitude: lat, longitude: lon })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Pan map to analyzed area
+                    map.setView([lat, lon], 15);
+                    
+                    // Reload detections to show new ones
+                    await loadDetections();
+                    
+                    alert(`Analysis complete! Found ${data.detections.length} detection(s)`);
+                } else {
+                    alert('Analysis failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error analyzing area:', error);
+                alert('Error analyzing area');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Generate report
+        async function generateReport() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/generate-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'area_analysis',
+                        filters: {
+                            include_informal_settlements: document.getElementById('informalSettlements').checked,
+                            include_illegal_dumping: document.getElementById('illegalDumping').checked
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `munisat_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                    a.click();
+                } else {
+                    alert('Report generation failed');
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                alert('Error generating report');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Send alert for detection
+        async function sendAlert() {
+            if (!selectedDetection) return;
+
+            try {
+                const response = await fetch('/api/send-alert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ detection_id: selectedDetection.id })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Alert sent successfully!');
+                } else {
+                    alert('Failed to send alert: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error sending alert:', error);
+                alert('Error sending alert');
+            }
+        }
+
+        // Update detection
+        async function updateDetection() {
+            if (!selectedDetection) return;
+
+            const status = document.getElementById('detectionStatus').value;
+            const priority = document.getElementById('detectionPriority').value;
+
+            try {
+                const response = await fetch(`/api/detections/${selectedDetection.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status, priority })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Detection updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('detectionModal')).hide();
+                    await loadDetections(); // Reload detections
+                } else {
+                    alert('Failed to update detection: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating detection:', error);
+                alert('Error updating detection');
+            }
+        }
+
+        // Toggle layer visibility
+        function toggleLayer(layerName) {
+            // Filter detections based on layer toggle
+            let filteredDetections = currentDetections;
+            
+            const showInformal = document.getElementById('informalSettlements').checked;
+            const showDumping = document.getElementById('illegalDumping').checked;
+            
+            filteredDetections = currentDetections.filter(d => {
+                if (d.detection_type === 'informal_settlement' && !showInformal) return false;
+                if (d.detection_type === 'illegal_dumping' && !showDumping) return false;
+                return true;
+            });
+            
+            displayDetections(filteredDetections);
+        }
+
+        // Refresh detections
+        function refreshDetections() {
+            loadDetections();
+        }
+
+        // Show/hide loading spinner
+        function showLoading(show) {
+            const spinner = document.querySelector('.loading-spinner');
+            spinner.style.display = show ? 'block' : 'none';
+        }
+
+        // Event listeners
+        document.getElementById('informalSettlements').addEventListener('change', () => toggleLayer('informal'));
+        document.getElementById('illegalDumping').addEventListener('change', () => toggleLayer('dumping'));
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(refreshDetections, 5 * 60 * 1000);
+        });
+    </script>
+</body>
+</html>
